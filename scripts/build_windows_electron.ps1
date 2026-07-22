@@ -1,9 +1,12 @@
 param(
-    [string]$AppVersion = "1.1.1"
+    [string]$AppVersion = ""
 )
 
 $ErrorActionPreference = "Stop"
 $ProjectDir = Split-Path -Parent $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($AppVersion)) {
+    $AppVersion = (& py -3.12 -c "import sys; sys.path.insert(0, r'$ProjectDir'); from version import APP_VERSION; print(APP_VERSION)").Trim()
+}
 $VenvDir = Join-Path $ProjectDir ".build-venv"
 $Python = Join-Path $VenvDir "Scripts\python.exe"
 $PyInstaller = Join-Path $VenvDir "Scripts\pyinstaller.exe"

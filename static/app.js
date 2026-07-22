@@ -139,6 +139,7 @@ function resetResults(mode = activeMode) {
   reviewSkuContexts = {};
   activeProcessedFiles = [];
   document.body.classList.remove("review-mode-active");
+  document.body.classList.remove("automatic-results");
   document.querySelector(".workspace").classList.remove("is-reviewing");
   newBatchButton.hidden = true;
   startOverButton.hidden = true;
@@ -232,6 +233,7 @@ function renderExportFiles() {
     const copy = document.createElement("span");
     const name = document.createElement("strong");
     name.textContent = file.filename;
+    name.title = file.filename;
     const detail = document.createElement("small");
     detail.textContent = `${formatNumber(file.updated)} SKUs processed`;
     copy.append(name, detail);
@@ -302,6 +304,7 @@ function renderBatchResults(data) {
   const corrections = data.corrections || [];
   activeJobId = data.job_id;
   activeProcessedFiles = (data.processed || []).map((file) => ({filename:file.filename, updated:file.updated}));
+  document.body.classList.toggle("automatic-results", data.review_mode === "automatic");
 
   setMetricLabels([
     "Reference SKUs",
