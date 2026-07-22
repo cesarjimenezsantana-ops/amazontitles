@@ -6,7 +6,7 @@
   "main": "electron/main.js",
   "scripts": {
     "electron:dev": "electron .",
-    "electron:pack:windows": "electron-builder --win nsis portable --x64"
+    "electron:pack:windows": "electron-builder --win nsis portable --x64 --publish never"
   },
   "devDependencies": {
     "electron": "43.2.0",
