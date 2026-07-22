@@ -1,0 +1,52 @@
+{
+  "name": "focus-amazon-tools",
+  "version": "1.1.1",
+  "private": true,
+  "description": "Amazon flat file batch processing desktop application",
+  "main": "electron/main.js",
+  "scripts": {
+    "electron:dev": "electron .",
+    "electron:pack:windows": "electron-builder --win nsis portable --x64"
+  },
+  "devDependencies": {
+    "electron": "43.2.0",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "com.focusamazontools.desktop",
+    "productName": "Focus Amazon Tools",
+    "asar": true,
+    "directories": {
+      "output": "release/windows"
+    },
+    "files": [
+      "electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "dist/FocusAmazonService",
+        "to": "python-service"
+      }
+    ],
+    "win": {
+      "icon": "packaging/assets/app-icon.ico",
+      "target": [
+        {"target": "nsis", "arch": ["x64"]},
+        {"target": "portable", "arch": ["x64"]}
+      ],
+      "artifactName": "FocusAmazonTools-${version}-${arch}-${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "artifactName": "FocusAmazonTools-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "FocusAmazonTools-Portable-${version}-Windows-${arch}.${ext}"
+    }
+  }
+}

@@ -1,0 +1,15 @@
+__pycache__/
+.pytest_cache/
+*.py[cod]
+.DS_Store
+.build-venv/
+build/
+dist/
+release/
+node_modules/
+web_output/
+output/
+packaging/assets/*.ico
+packaging/assets/*.icns
+packaging/assets/*.png
+packaging/windows/MicrosoftEdgeWebview2Setup.exe

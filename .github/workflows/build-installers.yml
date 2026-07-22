@@ -1,0 +1,80 @@
+name: Build desktop installers
+
+"on":
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Application version
+        required: true
+        default: 1.1.1
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  windows:
+    name: Windows x64 installer
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Determine version
+        shell: pwsh
+        run: |
+          $version = "${{ inputs.version }}"
+          if ([string]::IsNullOrWhiteSpace($version)) {
+            $version = "${{ github.ref_name }}".TrimStart("v")
+          }
+          "APP_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
+      - name: Build installer
+        shell: pwsh
+        run: ./scripts/build_windows_electron.ps1 -AppVersion $env:APP_VERSION
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FocusAmazonTools-Windows-x64
+          path: |
+            dist/FocusAmazonTools-Setup-*.exe
+            dist/FocusAmazonTools-Portable-*.exe
+          if-no-files-found: error
+
+  macos:
+    name: macOS ${{ matrix.arch }} installer
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            arch: arm64
+          - runner: macos-15-intel
+            arch: x64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Determine version
+        run: |
+          version="${{ inputs.version }}"
+          if [[ -z "${version}" ]]; then
+            version="${GITHUB_REF_NAME#v}"
+          fi
+          echo "APP_VERSION=${version}" >> "${GITHUB_ENV}"
+      - name: Build installer
+        env:
+          MACOS_SIGNING_IDENTITY: ${{ secrets.MACOS_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: ./scripts/build_macos.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FocusAmazonTools-macOS-${{ matrix.arch }}
+          path: dist/FocusAmazonTools-*-macOS-*.dmg
+          if-no-files-found: error

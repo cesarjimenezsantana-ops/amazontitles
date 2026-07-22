@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Focus Amazon Batch Updater</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+  <body>
+    <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+    <header class="amazon-topbar glass">
+      <div class="brand-lockup">
+        <img class="brand-mark" src="{{ url_for('app_icon') }}" alt="">
+        <div>
+          <strong>Focus Amazon Tools</strong>
+          <span>Flat file processing</span>
+        </div>
+      </div>
+      <div class="topbar-actions"><span class="seller-badge">v{{ app_version }}</span><span class="seller-badge">Local workspace</span><button id="ai-settings-button" type="button"><span aria-hidden="true">✦</span> AI settings</button></div>
+    </header>
+
+    <main class="app-shell">
+      <section class="intro">
+        <div>
+          <p class="eyebrow">Batch Compliance</p>
+          <h1>Amazon Flat File Batch Updater</h1>
+          <p class="lede">
+            Clean titles, highlights, bullet text, keywords, model names, and
+            descriptions before the next upload.
+          </p>
+        </div>
+        <div class="reference-pill">
+          <span>Default reference</span>
+          <strong{% if default_reference %} title="{{ default_reference }}"{% endif %}>
+            {% if default_reference %}
+              {{ default_reference }}
+            {% else %}
+              upload manually
+            {% endif %}
+          </strong>
+        </div>
+      </section>
+
+      <section class="workspace" aria-label="Amazon flat file processor">
+        <section class="upload-panel">
+          <div class="workflow-steps" aria-label="Workflow steps">
+            <span class="is-current"><b>1</b> Upload</span><span><b>2</b> Process</span><span><b>3</b> Review</span><span><b>4</b> Export</span>
+          </div>
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Files</p>
+              <h2>Choose Workflow</h2>
+            </div>
+            <span class="limit">{{ max_upload_mb }} MB max.</span>
+          </div>
+
+          <div class="mode-tabs" role="tablist" aria-label="Workflow mode">
+            <button class="mode-tab is-active" type="button" data-mode="batch" role="tab" aria-selected="true">
+              Reference Updater
+            </button>
+            <button class="mode-tab" type="button" data-mode="report" role="tab" aria-selected="false">
+              Processing Summary Fixer
+            </button>
+          </div>
+
+          <form class="mode-panel is-active" id="batch-form" data-mode-panel="batch">
+            <label class="drop-zone optional" for="reference">
+              <input id="reference" name="reference" type="file" accept=".xlsx,.xlsm">
+              <span class="drop-title">SKU Reference</span>
+              <span class="drop-copy">
+                Optional when the reference workbook already exists in the project folder.
+              </span>
+              <span class="file-list" id="reference-list">No file selected</span>
+            </label>
+
+            <div class="drop-grid">
+              <label class="drop-zone required" for="templates">
+                <input id="templates" name="templates" type="file" accept=".xlsm,.zip" multiple>
+                <span class="drop-title">Files or ZIP</span>
+                <span class="drop-copy">Choose .xlsm files or a ZIP. ZIP folders and subfolders are preserved.</span>
+                <span class="file-list" id="templates-list">No file selected</span>
+              </label>
+
+              <label class="drop-zone optional" for="template-folder">
+                <input id="template-folder" name="template_folder" type="file" accept=".xlsm" webkitdirectory directory multiple>
+                <input id="folder-token" name="folder_token" type="hidden">
+                <span class="drop-title">Template Folder</span>
+                <span class="drop-copy">Choose a folder when your system supports it. Otherwise, compress it as ZIP.</span>
+                <span class="file-list" id="template-folder-list">No folder selected</span>
+                <button class="folder-action" id="native-folder-button" type="button" hidden>Choose folder</button>
+              </label>
+            </div>
+
+            <fieldset class="review-mode">
+              <legend>How should changes be handled?</legend>
+              <label><input type="radio" name="review_mode" value="review" checked><span><strong>Review each change</strong><small>Edit, accept, or keep the original before downloading.</small></span></label>
+              <label><input type="radio" name="review_mode" value="automatic"><span><strong>Automatic</strong><small>Apply every safe correction immediately.</small></span></label>
+              <label><input type="radio" name="review_mode" value="manual"><span><strong>Manual alerts</strong><small>Update from the reference, but only flag text issues for you to fix.</small></span></label>
+            </fieldset>
+
+            <button class="primary-action" id="batch-submit" type="submit">
+              Process Batch
+            </button>
+          </form>
+
+          <form class="mode-panel" id="report-form" data-mode-panel="report" hidden>
+            <label class="drop-zone required" for="report-source">
+              <input id="report-source" name="source" type="file" accept=".xlsm" required>
+              <span class="drop-title">Original Uploaded Flat File</span>
+              <span class="drop-copy">Use the same Amazon .xlsm file you uploaded before the errors appeared.</span>
+              <span class="file-list" id="report-source-list">No file selected</span>
+            </label>
+
+            <label class="drop-zone required" for="processing-report">
+              <input id="processing-report" name="processing_report" type="file" accept=".xlsm" required>
+              <span class="drop-title">Amazon Processing Summary</span>
+              <span class="drop-copy">Upload Amazon's processing-summary .xlsm report for that file.</span>
+              <span class="file-list" id="processing-report-list">No file selected</span>
+            </label>
+
+            <button class="primary-action" id="report-submit" type="submit">
+              Build Retry File
+            </button>
+          </form>
+        </section>
+
+        <aside class="status-panel" aria-live="polite">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Result</p>
+              <h2>Process Status</h2>
+            </div>
+            <div class="result-actions">
+              <span class="status-badge" id="status-badge">Ready</span>
+              <button id="new-batch" type="button" hidden>Process another batch</button>
+              <button id="start-over" type="button" hidden>Start over</button>
+            </div>
+          </div>
+
+          <div class="meter" aria-hidden="true">
+            <span id="meter-fill"></span>
+          </div>
+
+          <div class="summary-grid">
+            <div>
+              <span id="metric-a-label">Input SKUs</span>
+              <strong id="metric-a">0</strong>
+            </div>
+            <div>
+              <span id="metric-b-label">Processed</span>
+              <strong id="metric-b">0</strong>
+            </div>
+            <div>
+              <span id="metric-c-label">Errors</span>
+              <strong id="metric-c">0</strong>
+            </div>
+            <div>
+              <span id="metric-d-label">Warnings</span>
+              <strong id="metric-d">0</strong>
+            </div>
+            <div>
+              <span id="metric-e-label">Corrections</span>
+              <strong id="metric-e">0</strong>
+            </div>
+          </div>
+
+          <div class="empty-state" id="empty-state">
+            Upload files to see the process summary here.
+          </div>
+
+          <div class="results" id="results" hidden>
+            <section class="export-center" id="export-center" hidden aria-labelledby="export-title">
+              <div class="export-heading">
+                <div><p class="eyebrow">Export</p><h3 id="export-title">Download processed files</h3><p>Select individual workbooks or download the complete batch.</p></div>
+                <a class="download-action" id="download-link" href="#" hidden>Download all</a>
+              </div>
+              <div class="export-toolbar">
+                <button id="export-select-all" type="button">Select all</button>
+                <button id="export-clear" type="button">Clear</button>
+                <label><input id="export-include-reports" type="checkbox" checked> Include CSV reports</label>
+                <span id="export-selection-count">0 selected</span>
+                <button class="primary-action" id="export-selected" type="button" disabled>Export selected</button>
+              </div>
+              <div class="export-file-list" id="export-file-list"></div>
+              <p class="export-status" id="export-status" aria-live="polite"></p>
+            </section>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr id="results-head"></tr>
+                </thead>
+                <tbody id="results-body"></tbody>
+              </table>
+            </div>
+            <div class="warnings" id="warnings" hidden>
+              <div class="section-title" id="warnings-title">Amazon Text Alerts</div>
+              <div id="warnings-list"></div>
+              <button class="secondary-action" id="fix-reprocess" type="button" hidden>
+                Fix And Process Again
+              </button>
+            </div>
+            <div class="corrections" id="corrections" hidden>
+              <div class="review-heading"><div><div class="section-title" id="corrections-title">Corrections Applied</div><p id="review-help"></p></div><div class="review-heading-actions"><span id="review-count"></span></div></div>
+              <div class="review-toolbar" id="review-toolbar" hidden>
+                <input id="review-search" type="search" placeholder="Search SKU or file" aria-label="Search SKU or file">
+                <select id="review-file-filter" aria-label="Filter by file"><option value="">All files</option></select>
+                <select id="review-status-filter" aria-label="Filter by status"><option value="">All rows</option><option value="edited">Edited</option><option value="original">Using original</option><option value="fixed">Using suggestion</option></select>
+                <select id="review-page-size" aria-label="Rows per page"><option value="25">25 per page</option><option value="50">50 per page</option><option value="100">100 per page</option></select>
+                <button type="button" data-review-all="fixed" title="Use suggested values for selected SKUs">✓ Suggested</button><button type="button" data-review-all="original" title="Restore original values for selected SKUs">↶ Original</button>
+              </div>
+              <div id="corrections-list"></div>
+              <div class="review-pagination" id="review-pagination" hidden><button id="review-prev" type="button">Previous</button><span id="review-page-info"></span><button id="review-next" type="button">Next</button></div>
+              <button class="primary-action review-submit" id="review-submit" type="button" hidden>Apply reviewed changes</button>
+            </div>
+            <div class="errors" id="errors" hidden></div>
+          </div>
+        </aside>
+      </section>
+    </main>
+    <div class="modal-backdrop" id="ai-settings-modal" hidden>
+      <section class="settings-modal" role="dialog" aria-modal="true" aria-labelledby="ai-settings-title">
+        <div class="settings-heading"><div><p class="eyebrow">Optional</p><h2 id="ai-settings-title">OpenAI optimization</h2></div><button id="ai-settings-close" type="button" aria-label="Close AI settings">×</button></div>
+        <p class="settings-copy">Optimize individual fields during review. Your API key stays in memory only and is cleared when the app closes.</p>
+        <label class="settings-field"><span>OpenAI API key</span><input id="ai-api-key" type="password" autocomplete="off" placeholder="sk-…"></label>
+        <label class="settings-field"><span>Model</span><select id="ai-model"><option value="gpt-5.6-terra">GPT-5.6 Terra · balanced</option><option value="gpt-5.6-sol">GPT-5.6 Sol · highest quality</option><option value="gpt-5.6-luna">GPT-5.6 Luna · lowest cost</option></select></label>
+        <div class="settings-note" id="ai-settings-status">Not configured</div>
+        <div class="settings-actions"><button id="ai-settings-cancel" type="button">Cancel</button><button class="primary-action" id="ai-settings-save" type="button">Save settings</button></div>
+      </section>
+    </div>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>
