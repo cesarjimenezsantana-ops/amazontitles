@@ -19,6 +19,11 @@ class DesktopFoundationTests(unittest.TestCase):
         self.assertTrue((RESOURCE_DIR / "static" / "app.js").is_file())
         self.assertTrue(any(RESOURCE_DIR.glob("*.xlsx")))
 
+    def test_web_assets_are_versioned_to_avoid_stale_desktop_cache(self) -> None:
+        template = (RESOURCE_DIR / "templates" / "index.html").read_text(encoding="utf-8")
+        self.assertIn("filename='styles.css', v=app_version", template)
+        self.assertIn("filename='app.js', v=app_version", template)
+
     def test_range_separator_remains_readable(self) -> None:
         fixed, actions = sanitize_bullet_point("Range: 120~150 miles")
         self.assertEqual(fixed, "Range: 120-150 miles")

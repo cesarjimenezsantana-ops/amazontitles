@@ -23,7 +23,7 @@ Run this command on a Mac:
 ./scripts/build_macos.sh
 ```
 
-The installer is created in `dist/FocusAmazonTools-1.1.6-macOS-<architecture>.dmg`. The version defaults to `version.py`; set `APP_VERSION` only to override it.
+The installer is created in `dist/FocusAmazonTools-1.1.7-macOS-<architecture>.dmg`. The version defaults to `version.py`; set `APP_VERSION` only to override it.
 
 For public distribution without Gatekeeper warnings, set `MACOS_SIGNING_IDENTITY`, `APPLE_ID`, `APPLE_TEAM_ID`, and `APPLE_APP_PASSWORD` before building. The script signs and notarizes the DMG when all notarization values are available.
 
@@ -37,8 +37,8 @@ Install Python 3.12 and Node.js 22, then run in PowerShell:
 
 The build creates both:
 
-- `dist\FocusAmazonTools-Setup-1.1.6.exe` — per-user installer.
-- `dist\FocusAmazonTools-Portable-1.1.6-Windows-x64.exe` — portable executable that runs without installation.
+- `dist\FocusAmazonTools-Setup-1.1.7.exe` — per-user installer.
+- `dist\FocusAmazonTools-Portable-1.1.7-Windows-x64.exe` — portable executable that runs without installation.
 
 Electron bundles its own browser runtime, so WebView2 is not required. The portable file can be copied directly to another Windows x64 computer.
 
@@ -50,7 +50,7 @@ The GitHub Actions workflow in `.github/workflows/build-installers.yml` builds:
 - macOS Apple Silicon installer
 - macOS Intel installer
 
-Run it manually with a version number or push a tag such as `v1.1.6`. Each installer is uploaded as a workflow artifact.
+Run it manually with a version number or push a tag such as `v1.1.7`. Each installer is uploaded as a workflow artifact.
 
 To build both installers without maintaining two computers, upload this project to a GitHub repository, open **Actions → Build desktop installers → Run workflow**, enter the version, and download the three generated artifacts when the run finishes.
 
