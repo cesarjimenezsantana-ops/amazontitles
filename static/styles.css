@@ -741,6 +741,8 @@ tbody tr:last-child td {
 .sku-cell strong { display: block; overflow-wrap: anywhere; font-size: .76rem; }
 .editable-cell.is-empty { color: #9aa5ad; text-align: center; }
 .cell-meta { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 4px; color: #6e7a83; font-size: .65rem; }
+.editable-cell.has-source-warning textarea { border-color: #d99000; background: #fffaf0; }
+.editable-cell.has-source-warning .cell-meta { color: #9a5d00; font-weight: 700; }
 .cell-actions { display: flex; align-items: center; gap: 3px; }
 .cell-meta button { width: 22px; height: 20px; padding: 0; border: 0; border-radius: 4px; background: #eef2f5; color: #52616d; font-size: .8rem; cursor: pointer; opacity: 0; transition: opacity 120ms ease; }
 .cell-meta .ai-optimize-button { background: #f1efff; color: #6554c0; }

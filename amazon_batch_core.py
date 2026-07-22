@@ -708,9 +708,20 @@ def process_xlsm(
                 ),
                 "",
             )
+            source_title_matches_item_name = bool(
+                source_internal_title
+                and source_item_name
+                and WHITESPACE_RE.sub(" ", source_internal_title).strip().casefold()
+                == WHITESPACE_RE.sub(" ", source_item_name).strip().casefold()
+            )
             sku_context["Source Internal Title"] = source_internal_title
             sku_context["Source Amazon Title (Item Name)"] = source_item_name
             sku_context["Source Item Highlight"] = source_highlight
+            if source_title_matches_item_name:
+                sku_context["Source Internal Title Warning"] = (
+                    "The uploaded Title matches Item Name. This may be a previously processed file; "
+                    "verify it against the original flat file."
+                )
             item_name, item_highlight = ref[sku]
             if item_name:
                 sku_context["Verified reference Amazon title"] = str(item_name).strip()
@@ -766,6 +777,17 @@ def process_xlsm(
                         "original": original,
                         "fixed": fixed,
                     }
+                )
+
+            if source_title_matches_item_name:
+                title_letter = (col_map.get("title") or ["B"])[0]
+                record_warning(
+                    title_letter,
+                    "Title",
+                    source_internal_title,
+                    [
+                        "Uploaded Title matches Item Name; verify that this is the original flat file"
+                    ],
                 )
 
             def set_text_cell(letter: str, value: str) -> None:

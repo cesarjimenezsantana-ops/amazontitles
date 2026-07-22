@@ -777,7 +777,13 @@ function buildReviewFieldCell(group, field) {
     const sourceMeta = document.createElement("div");
     sourceMeta.className = "cell-meta";
     const limit = {"Title": 200, "Item Name": 75, "Item Highlight": 125}[field];
-    sourceMeta.textContent = `${sourceValue.length}/${limit} · From uploaded file`;
+    const sourceWarning = field === "Title" ? String(group.context?.["Source Internal Title Warning"] || "") : "";
+    sourceMeta.textContent = `${sourceValue.length}/${limit} · From uploaded file${sourceWarning ? " · Verify original" : ""}`;
+    if (sourceWarning) {
+      cell.classList.add("has-source-warning");
+      sourceEditor.title = sourceWarning;
+      sourceMeta.title = sourceWarning;
+    }
     cell.append(sourceEditor, sourceMeta);
     return cell;
   }
