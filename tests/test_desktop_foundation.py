@@ -42,7 +42,7 @@ class DesktopFoundationTests(unittest.TestCase):
                 "item_highlight[marketplace_id=US]#1.value",
             )
             sheet["B7"], sheet["C7"], sheet["I7"], sheet["J7"] = (
-                "Original internal catalog title",
+                "Original ~ internal catalog title",
                 "SKU-1",
                 "Old Amazon title",
                 "Old highlight",
@@ -66,7 +66,7 @@ class DesktopFoundationTests(unittest.TestCase):
 
             self.assertNotIn("error", stats)
             processed = load_workbook(output, read_only=True)["Template"]
-            self.assertEqual(processed["B7"].value, "Original internal catalog title")
+            self.assertEqual(processed["B7"].value, "Original ~ internal catalog title")
             self.assertEqual(processed["I7"].value, "New reference Amazon title")
             self.assertEqual(processed["J7"].value, "New reference highlight")
             self.assertEqual(processed["B8"].value, "Already duplicated title")

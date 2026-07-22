@@ -913,20 +913,8 @@ def process_xlsm(
                 record_warning(letter, field, value, remaining_issues)
                 return value
 
-            # Internal Title belongs to the uploaded template. Clean it only
-            # when necessary; never replace it with the reference Item Name.
-            for letter in col_map.get("title", ["B"]):
-                current_title = str(cell_val(cells.get(letter)) or "")
-                if not current_title:
-                    continue
-                cleaned_title = prepare_value(
-                    letter,
-                    "Title",
-                    current_title,
-                    TITLE_MAX_LENGTH,
-                )
-                if cleaned_title != current_title:
-                    set_text_cell(letter, cleaned_title)
+            # Title is a read-only source field from the uploaded Amazon file.
+            # Preserve it byte-for-byte; reference data only updates Item Name.
 
             if item_name:
                 item_name_value = prepare_value(

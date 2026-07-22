@@ -704,7 +704,7 @@ function renderCorrectionGroups() {
   wrap.className = "review-grid-wrap";
   const table = document.createElement("table");
   table.className = "review-grid";
-  table.innerHTML = `<thead><tr><th><input type="checkbox" id="select-page" aria-label="Select page"></th><th>#</th><th>SKU</th><th>Internal title</th><th>Amazon title <small>(Item Name)</small></th><th>Item highlight</th><th>Other</th><th>Status</th><th>File</th></tr></thead>`;
+  table.innerHTML = `<thead><tr><th><input type="checkbox" id="select-page" aria-label="Select page"></th><th>#</th><th>SKU</th><th>Title <small>(uploaded file)</small></th><th>Amazon title <small>(Item Name)</small></th><th>Item highlight</th><th>Other</th><th>Status</th><th>File</th></tr></thead>`;
   const body = document.createElement("tbody");
   pageGroups.forEach((group, pageIndex) => {
     const row = document.createElement("tr");
