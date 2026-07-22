@@ -9,7 +9,7 @@ from pathlib import Path
 
 APP_NAME = "Focus Amazon Tools"
 APP_ID = "com.focusamazontools.desktop"
-APP_VERSION = "1.1.3"
+APP_VERSION = "1.1.4"
 
 
 def _is_frozen() -> bool:

@@ -8,7 +8,7 @@ from urllib.request import urlopen
 
 from openpyxl import Workbook, load_workbook
 
-from amazon_batch_core import process_xlsm, sanitize_bullet_point
+from amazon_batch_core import load_reference, process_xlsm, sanitize_bullet_point
 from app_paths import RESOURCE_DIR
 from desktop_app import LocalApplicationServer
 
@@ -24,7 +24,26 @@ class DesktopFoundationTests(unittest.TestCase):
         self.assertEqual(fixed, "Range: 120-150 miles")
         self.assertIn("replaced ~ with -", actions)
 
-    def test_reference_item_name_never_overwrites_internal_title(self) -> None:
+    def test_reference_loader_ignores_title_column(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            reference = Path(temp_dir) / "reference.xlsx"
+            workbook = Workbook()
+            sheet = workbook.active
+            sheet.append(["SKU", "Title", "Item Name", "Item Highlight"])
+            sheet.append([
+                "SKU-1",
+                "This reference Title must be ignored",
+                "New Item Name",
+                "New Item Highlight",
+            ])
+            workbook.save(reference)
+
+            self.assertEqual(
+                load_reference(reference),
+                {"SKU-1": ("New Item Name", "New Item Highlight")},
+            )
+
+    def test_reference_fields_never_overwrite_uploaded_title(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             source = Path(temp_dir) / "source.xlsm"
             output = Path(temp_dir) / "output.xlsm"
@@ -70,9 +89,10 @@ class DesktopFoundationTests(unittest.TestCase):
             self.assertEqual(processed["I7"].value, "New reference Amazon title")
             self.assertEqual(processed["J7"].value, "New reference highlight")
             self.assertEqual(processed["B8"].value, "Already duplicated title")
-            self.assertTrue(
-                any("Uploaded Title matches Item Name" in issue for warning in stats["warnings"] for issue in warning["issues"])
-            )
+            title_warnings = [
+                warning for warning in stats["warnings"] if warning["field"] == "Title"
+            ]
+            self.assertEqual(title_warnings, [])
 
     def test_local_server_uses_loopback_and_random_port(self) -> None:
         server = LocalApplicationServer()

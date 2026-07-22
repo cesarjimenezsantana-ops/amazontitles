@@ -759,7 +759,7 @@ function buildReviewFieldCell(group, field) {
   const matches = group.items.filter(({correction}) => correction.field === field);
   if (!matches.length) {
     const sourceKey = {
-      "Title": "Source Internal Title",
+      "Title": "Source Uploaded Title",
       "Item Name": "Source Amazon Title (Item Name)",
       "Item Highlight": "Source Item Highlight",
     }[field];
@@ -777,13 +777,7 @@ function buildReviewFieldCell(group, field) {
     const sourceMeta = document.createElement("div");
     sourceMeta.className = "cell-meta";
     const limit = {"Title": 200, "Item Name": 75, "Item Highlight": 125}[field];
-    const sourceWarning = field === "Title" ? String(group.context?.["Source Internal Title Warning"] || "") : "";
-    sourceMeta.textContent = `${sourceValue.length}/${limit} · From uploaded file${sourceWarning ? " · Verify original" : ""}`;
-    if (sourceWarning) {
-      cell.classList.add("has-source-warning");
-      sourceEditor.title = sourceWarning;
-      sourceMeta.title = sourceWarning;
-    }
+    sourceMeta.textContent = `${sourceValue.length}/${limit} · From uploaded file · Read only`;
     cell.append(sourceEditor, sourceMeta);
     return cell;
   }
