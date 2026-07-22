@@ -89,6 +89,17 @@ class DesktopFoundationTests(unittest.TestCase):
             self.assertEqual(processed["I7"].value, "New reference Amazon title")
             self.assertEqual(processed["J7"].value, "New reference highlight")
             self.assertEqual(processed["B8"].value, "Already duplicated title")
+            sku_1_context = next(
+                item["context"] for item in stats["sku_contexts"] if item["sku"] == "SKU-1"
+            )
+            self.assertEqual(
+                sku_1_context["Source Uploaded Title"],
+                "Original ~ internal catalog title",
+            )
+            self.assertEqual(
+                sku_1_context["Source Amazon Title (Item Name)"],
+                "Old Amazon title",
+            )
             title_warnings = [
                 warning for warning in stats["warnings"] if warning["field"] == "Title"
             ]

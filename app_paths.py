@@ -6,10 +6,11 @@ import sys
 import time
 from pathlib import Path
 
+from version import APP_VERSION
+
 
 APP_NAME = "Focus Amazon Tools"
 APP_ID = "com.focusamazontools.desktop"
-APP_VERSION = "1.1.4"
 
 
 def _is_frozen() -> bool:
