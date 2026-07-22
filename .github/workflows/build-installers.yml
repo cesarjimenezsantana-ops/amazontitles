@@ -5,8 +5,8 @@ name: Build desktop installers
     inputs:
       version:
         description: Application version
-        required: true
-        default: 1.1.1
+        required: false
+        default: ""
   push:
     tags:
       - "v*"
@@ -29,7 +29,11 @@ jobs:
         run: |
           $version = "${{ inputs.version }}"
           if ([string]::IsNullOrWhiteSpace($version)) {
-            $version = "${{ github.ref_name }}".TrimStart("v")
+            if ("${{ github.ref_type }}" -eq "tag") {
+              $version = "${{ github.ref_name }}".TrimStart("v")
+            } else {
+              $version = python -c "from app_paths import APP_VERSION; print(APP_VERSION)"
+            }
           }
           "APP_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
       - name: Build installer
@@ -63,7 +67,11 @@ jobs:
         run: |
           version="${{ inputs.version }}"
           if [[ -z "${version}" ]]; then
-            version="${GITHUB_REF_NAME#v}"
+            if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+              version="${GITHUB_REF_NAME#v}"
+            else
+              version="$(python -c 'from app_paths import APP_VERSION; print(APP_VERSION)')"
+            fi
           fi
           echo "APP_VERSION=${version}" >> "${GITHUB_ENV}"
       - name: Build installer
