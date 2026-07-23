@@ -396,6 +396,12 @@ def load_reference(path: str | Path) -> dict[str, tuple[str | None, str | None]]
         sheet = workbook.active
         header_row_number = None
         header_indexes: dict[str, int] = {}
+        highlight_headers = {
+            "item highlight",
+            "item highlights",
+            "highlight",
+            "highlights",
+        }
 
         max_scan_row = min(sheet.max_row or 20, 20)
         for row_number, row in enumerate(
@@ -407,14 +413,20 @@ def load_reference(path: str | Path) -> dict[str, tuple[str | None, str | None]]
                 continue
 
             maybe_indexes = {name: idx for idx, name in enumerate(normalized)}
-            if "item name" in maybe_indexes and "item highlight" in maybe_indexes:
+            highlight_header = next(
+                (name for name in highlight_headers if name in maybe_indexes),
+                None,
+            )
+            if "item name" in maybe_indexes and highlight_header:
                 header_row_number = row_number
                 header_indexes = maybe_indexes
+                header_indexes["item highlight"] = maybe_indexes[highlight_header]
                 break
 
         if header_row_number is None:
             raise ValueError(
-                "The reference workbook must include SKU, Item Name, and Item Highlight columns."
+                "The reference workbook must include SKU, Item Name, and "
+                "Item Highlight (or Highlights) columns."
             )
 
         sku_idx = header_indexes["sku"]
@@ -1055,7 +1067,7 @@ def process_xlsm(
 
 
 def update_xlsm_cells(path: str | Path, changes: list[dict[str, Any]]) -> None:
-    """Update text cells in the Template sheet without rebuilding the workbook."""
+    """Update reviewed text cells while keeping the uploaded Title read-only."""
     workbook_path = Path(path)
     if not changes:
         return
@@ -1066,6 +1078,27 @@ def update_xlsm_cells(path: str | Path, changes: list[dict[str, Any]]) -> None:
             raise ValueError("The workbook does not contain a 'Template' sheet")
         shared_root, strings, string_index, has_shared_strings = _read_shared_strings(zin)
         sheet_root = ET.fromstring(zin.read(sheet_part))
+        sheet_data = sheet_root.find(q("sheetData"))
+        if sheet_data is None:
+            raise ValueError("The Template sheet does not contain sheetData")
+
+        def cell_value(cell: ET.Element | None) -> str | None:
+            if cell is None:
+                return None
+            if cell.get("t") == "inlineStr":
+                text_el = cell.find(f"{q('is')}/{q('t')}")
+                return text_el.text if text_el is not None else None
+            value_el = cell.find(q("v"))
+            if value_el is None or value_el.text is None:
+                return None
+            if cell.get("t") == "s":
+                try:
+                    return strings[int(value_el.text)]
+                except (IndexError, ValueError):
+                    return None
+            return value_el.text
+
+        title_columns = set(map_template_columns(sheet_data, cell_value).get("title", ["B"]))
         cells = {
             cell.get("r"): cell
             for cell in sheet_root.iter(q("c"))
@@ -1087,7 +1120,12 @@ def update_xlsm_cells(path: str | Path, changes: list[dict[str, Any]]) -> None:
             return string_index[value]
 
         for change in changes:
-            ref = f"{change['column']}{int(change['row'])}"
+            column = str(change["column"]).upper()
+            if column in title_columns:
+                raise ValueError(
+                    f"Column {column} is the uploaded Title and is read-only"
+                )
+            ref = f"{column}{int(change['row'])}"
             cell = cells.get(ref)
             if cell is None:
                 raise ValueError(f"Cell {ref} was not found")

@@ -139,6 +139,7 @@ function resetResults(mode = activeMode) {
   reviewSkuContexts = {};
   activeProcessedFiles = [];
   document.body.classList.remove("review-mode-active");
+  document.body.classList.remove("automatic-results");
   document.querySelector(".workspace").classList.remove("is-reviewing");
   newBatchButton.hidden = true;
   startOverButton.hidden = true;
@@ -232,6 +233,7 @@ function renderExportFiles() {
     const copy = document.createElement("span");
     const name = document.createElement("strong");
     name.textContent = file.filename;
+    name.title = file.filename;
     const detail = document.createElement("small");
     detail.textContent = `${formatNumber(file.updated)} SKUs processed`;
     copy.append(name, detail);
@@ -302,6 +304,7 @@ function renderBatchResults(data) {
   const corrections = data.corrections || [];
   activeJobId = data.job_id;
   activeProcessedFiles = (data.processed || []).map((file) => ({filename:file.filename, updated:file.updated}));
+  document.body.classList.toggle("automatic-results", data.review_mode === "automatic");
 
   setMetricLabels([
     "Reference SKUs",
@@ -365,7 +368,8 @@ function renderBatchResults(data) {
     fixReprocessButton.hidden = Boolean(data.auto_fix_bullets);
   }
 
-  if (corrections.length) {
+  const editableCorrections = corrections.filter((correction) => correction.field !== "Title");
+  if (editableCorrections.length) {
     correctionsBox.hidden = false;
     correctionsList.textContent = "";
     const isReview = data.review_mode === "review";
@@ -373,23 +377,23 @@ function renderBatchResults(data) {
     document.querySelector(".workspace").classList.toggle("is-reviewing", isReview);
     correctionsTitle.textContent = isReview ? "Review proposed changes" : "Corrections applied";
     reviewHelp.textContent = isReview ? "Edit final values directly. Hover a field to view its original value." : "Safe corrections were applied automatically.";
-    reviewCount.textContent = `${formatNumber(corrections.length)} changes`;
+    reviewCount.textContent = `${formatNumber(editableCorrections.length)} changes`;
     reviewToolbar.hidden = !isReview;
     reviewSubmit.hidden = !isReview;
-    reviewCorrections = corrections;
+    reviewCorrections = editableCorrections;
     reviewSkuContexts = data.sku_contexts || {};
     activeJobId = data.job_id;
-    reviewChoices = corrections.map((correction) => ({ choice: "fixed", value: correction.fixed }));
+    reviewChoices = editableCorrections.map((correction) => ({ choice: "fixed", value: correction.fixed }));
     reviewIsEditable = isReview;
     reviewPage = 1;
-    selectedReviewRows = new Set(corrections.map((item) => `${item.filename}\u0000${item.sku}`));
+    selectedReviewRows = new Set(editableCorrections.map((item) => `${item.filename}\u0000${item.sku}`));
     reviewSearch.value = "";
     reviewFileFilter.textContent = "";
     const allFilesOption = document.createElement("option");
     allFilesOption.value = "";
     allFilesOption.textContent = "All files";
     reviewFileFilter.appendChild(allFilesOption);
-    Array.from(new Set(corrections.map((item) => item.filename))).sort().forEach((filename) => {
+    Array.from(new Set(editableCorrections.map((item) => item.filename))).sort().forEach((filename) => {
       const option = document.createElement("option");
       option.value = filename;
       option.textContent = filename;
@@ -400,7 +404,7 @@ function renderBatchResults(data) {
   }
 
   renderErrors(data.errors || []);
-  if (data.review_mode !== "review" || !corrections.length) showDownload(data.download_url);
+  if (data.review_mode !== "review" || !editableCorrections.length) showDownload(data.download_url);
   showResults();
 }
 

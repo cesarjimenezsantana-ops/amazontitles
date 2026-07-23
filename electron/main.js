@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, ipcMain, shell } = require("electron");
+const { app, BrowserWindow, dialog, ipcMain, session, shell } = require("electron");
 const { spawn } = require("node:child_process");
 const crypto = require("node:crypto");
 const path = require("node:path");
@@ -65,6 +65,9 @@ function startService() {
 
 async function createWindow() {
   const url = await startService();
+  // Installed upgrades reuse Electron's user-data directory. Clear HTTP assets so
+  // an older renderer can never survive a service/application version upgrade.
+  await session.defaultSession.clearCache();
   mainWindow = new BrowserWindow({
     title: "Focus Amazon Tools",
     width: 1280,
@@ -118,4 +121,3 @@ app.on("window-all-closed", () => app.quit());
 app.on("before-quit", () => {
   if (serviceProcess && !serviceProcess.killed) serviceProcess.kill();
 });
-

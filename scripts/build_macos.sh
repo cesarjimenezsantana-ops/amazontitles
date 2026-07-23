@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-APP_VERSION="${APP_VERSION:-1.1.1}"
+APP_VERSION="${APP_VERSION:-$(cd "${PROJECT_DIR}" && python3 -c 'from version import APP_VERSION; print(APP_VERSION)')}"
 BUILD_ARCH="$(uname -m)"
 VENV_DIR="${PROJECT_DIR}/.build-venv"
 
